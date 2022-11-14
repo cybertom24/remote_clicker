@@ -7,7 +7,7 @@ This will be done in the quickest way possible
 
 # -------------------------------
 # OPTIONS
-HOST_IP = "192.168.1.86"
+HOST_IP = "127.0.0.1"
 HOST_PORT = 4000
 KEY = 'a'
 # -------------------------------

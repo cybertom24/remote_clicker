@@ -1,43 +1,70 @@
+"""
+Remote Clicker Host
+This script hosts an UDP Server and will press for DELAY seconds the keys passed asa letters via the UDP datagrams
+"""
+
+
 import socket
 from pyautogui import keyDown, keyUp
 import time
 from threading import Thread
 
+# Options:
 PORT = 4000
 #IP = socket.gethostbyname(socket.gethostname())
-IP = "192.168.137.1"
-BUFF_SIZE = 32
-
-KEYS = "abcdefghijklmnopqrstuvwxyz1234567890"
+#IP = "192.168.137.1"
+IP = "127.0.0.1"
 DELAY = 0.10
-# List of tuples with the keys being pressed and the ms remained 
-pressed = {}
 
+# ------------------------------------------------------------------------------------
+
+BUFFER_SIZE = 32
+KEYS = "abcdefghijklmnopqrstuvwxyz1234567890"
+
+# ------------------------------------------------------------------------------------
+
+# Create the UDP Server and host it
+receiveSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# Bind the socket to the address and port
+serverAddress = (IP, PORT)
+receiveSocket.bind(serverAddress)
+print("Listening on", serverAddress)
+
+# ------------------------------------------------------------------------------------
+
+# Functions for the threads:
+# This is the function that will be called when a key needs to be pressed
 def pressKey(key):
     keyDown(key)
     time.sleep(DELAY)
     keyUp(key)
 
-# Create the UDP Server and host it
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-# Bind the socket to the port
-server_address = (IP, PORT)
-s.bind(server_address)
-print("Listening on", server_address)
-
-def listenForUDP():
-    while True:
-        #print("...")
-        data, address = s.recvfrom(BUFF_SIZE)
+listen = True
+# This is the function that checks if a datagram has been received and starts the threads for pressing the key
+def listenerUDP():
+    while listen:
+        data, address = receiveSocket.recvfrom(BUFFER_SIZE)
         key = data.decode('utf-8')[0]
-        #print("> Received from", address, ":", key)
         
-        #print("pressed", key)
+        print("pressed", key)
         Thread(target=pressKey, args=(key, )).start()
+
+# ------------------------------------------------------------------------------------
         
+if __name__ == "__main__":
+    print("!! Use CTRL-C or write 'stop' to exit the program !!")
+    
+    # Start the listener thread
+    listenThread = Thread(target=listenerUDP)
+    # Set the listenThread as daemon so it will be killed when the program exits
+    listenThread.daemon = True
+    listenThread.start()
 
-# This thread will listen for incoming messages and add the keys to the list
-listenThread = Thread(target=listenForUDP)
+    # Hold the terminal until "stop" is written
+    while input() != "stop":
+        continue
 
-# Start listening and responding to key request
-listenThread.start()
+    # Stop the thread and exit the program
+    print("Exting program...")
+    listen = False
+    exit(0)
