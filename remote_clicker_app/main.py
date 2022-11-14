@@ -31,7 +31,6 @@ def send(message):
 # Kivy:
 class Screen(Widget):
     def on_touch_down(self, touch):
-        print("Sending:", KEY)
         send(KEY)        
 
 class RemoteClickerApp(App):
